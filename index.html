@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Golden PDF AI</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+
+<style>
+body {
+  font-family: 'Segoe UI', sans-serif;
+  margin: 0;
+  background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+  color: white;
+}
+
+.container {
+  max-width: 800px;
+  margin: auto;
+  padding: 20px;
+}
+
+.glass {
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(10px);
+  border-radius: 15px;
+  padding: 20px;
+}
+
+h1 {
+  text-align: center;
+  color: #00ffd5;
+}
+
+input, button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  border-radius: 8px;
+  border: none;
+}
+
+button {
+  background: #00ffd5;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.result {
+  margin-top: 20px;
+  text-align: left;
+}
+
+.section {
+  margin-top: 20px;
+}
+
+.brand {
+  text-align: center;
+  margin-top: 30px;
+  font-size: 14px;
+  opacity: 0.7;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <h1>📄 Golden PDF AI</h1>
+
+  <div class="glass">
+    <input type="text" id="username" placeholder="Enter your name...">
+    <input type="file" id="pdfUpload" accept="application/pdf">
+    <button onclick="extractText()">✨ Explain My PDF</button>
+
+    <div class="result" id="result"></div>
+  </div>
+
+  <div class="brand">
+    Sponsored by <b>Golden Data Deals</b>
+  </div>
+</div>
+
+<script>
+async function extractText() {
+  const file = document.getElementById('pdfUpload').files[0];
+  const name = document.getElementById('username').value || "User";
+
+  if (!file) return alert("Upload a PDF first");
+
+  const reader = new FileReader();
+
+  reader.onload = async function() {
+    const typedarray = new Uint8Array(this.result);
+    const pdf = await pdfjsLib.getDocument(typedarray).promise;
+
+    let text = "";
+
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+
+      content.items.forEach(item => {
+        text += item.str + " ";
+      });
+    }
+
+    generateAI(text, name);
+  };
+
+  reader.readAsArrayBuffer(file);
+}
+
+function generateAI(text, name) {
+  let sentences = text.split(".");
+  let bullets = sentences.slice(0,6).map(s => "• " + s).join("<br>");
+
+  let summary = sentences.slice(0,3).join(". ");
+
+  document.getElementById("result").innerHTML = `
+    <h2>👋 Hello ${name}</h2>
+
+    <div class="section">
+      <h3>📌 Bullet Points</h3>
+      ${bullets}
+    </div>
+
+    <div class="section">
+      <h3>🔑 Key Takeaways</h3>
+      <p>${summary}</p>
+    </div>
+
+    <div class="section">
+      <h3>🧠 Simple Explanation</h3>
+      <p>This document explains key ideas in a simplified way to help you understand faster and remember better.</p>
+    </div>
+
+    <div class="section">
+      <h3>📚 Study Notes</h3>
+      <p>Focus on the main concepts above and revise them regularly for better retention.</p>
+    </div>
+
+    <button onclick="copyText()">📋 Copy</button>
+    <button onclick="downloadText()">⬇ Download</button>
+  `;
+}
+
+function copyText() {
+  const text = document.getElementById("result").innerText;
+  navigator.clipboard.writeText(text);
+  alert("Copied!");
+}
+
+function downloadText() {
+  const text = document.getElementById("result").innerText;
+  const blob = new Blob([text], {type: "text/plain"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "summary.txt";
+  a.click();
+}
+</script>
+
+</body>
+</html>
